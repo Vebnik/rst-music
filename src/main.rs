@@ -25,13 +25,16 @@ async fn main() -> Result<(), ()> {
     let intents = serenity::GatewayIntents::non_privileged();
 
     // commands scope
-    let cmds = vec![
-        commands::test::command::age(),
-    ];
+    let cmds = commands::get_cmds();
+    println!("Try to register {} commands", cmds.capacity());
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {commands: cmds, ..Default::default()})
-        .setup(|ctx, _ready, framework| {
+        .setup(|ctx, ready, framework| {
+            println!("Setup as {} app", ready.user.name);
+
+            ctx.idle();
+
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {})
@@ -43,7 +46,8 @@ async fn main() -> Result<(), ()> {
         .framework(framework)
         .await
         .unwrap();
-
+    
+    println!("Started app ...");
     client.start().await.unwrap();
 
     Ok(())
