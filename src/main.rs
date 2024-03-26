@@ -1,28 +1,17 @@
 mod config;
 mod error;
+mod commands;
+mod types;
 
 use config::Config;
-use error::Result;
+use types::Data;
 
-use serenity::async_trait;
-use serenity::model::channel::Message;
-use serenity::prelude::*;
+// poise
+use poise::serenity_prelude as serenity;
 
-struct Handler;
-
-#[async_trait]
-impl EventHandler for Handler {
-    async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content == "!ping" {
-            if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
-                println!("Error sending message: {why:?}");
-            }
-        }
-    }
-}
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), ()> {
     // Init env
     dotenv::dotenv().ok();
 
@@ -30,21 +19,32 @@ async fn main() -> Result<()> {
     env_logger::init();
 
     // Create config
-    let cfg = Config::new()?;
+    let cfg = Config::new().unwrap();
 
     // bot config ...
-    let intents = GatewayIntents::GUILD_MESSAGES
-        | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT;
+    let intents = serenity::GatewayIntents::non_privileged();
 
-    // Create a new instance of the Client, logging in as a bot.
-    let mut client = Client::builder(&cfg.token, intents)
-        .event_handler(Handler).await?;
+    // commands scope
+    let cmds = vec![
+        commands::test::command::age(),
+    ];
 
-    // Start listening
-    if let Err(why) = client.start().await {
-        log::error!("Client error: {:?}", why);
-    }
+    let framework = poise::Framework::builder()
+        .options(poise::FrameworkOptions {commands: cmds, ..Default::default()})
+        .setup(|ctx, _ready, framework| {
+            Box::pin(async move {
+                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                Ok(Data {})
+            })
+        })
+        .build();
+
+    let mut client = serenity::ClientBuilder::new(&cfg.token, intents)
+        .framework(framework)
+        .await
+        .unwrap();
+
+    client.start().await.unwrap();
 
     Ok(())
 }
