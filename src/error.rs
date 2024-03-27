@@ -23,6 +23,6 @@ impl From<serenity::Error> for CustomError {
     }
 }
 
-pub type Result<T> = std::result::Result<T, CustomError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;

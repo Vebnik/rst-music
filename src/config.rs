@@ -6,6 +6,7 @@ use crate::error::Result;
 #[serde(rename_all(serialize = "SCREAMING_SNAKE_CASE"))]
 pub struct Config {
     pub token: String,
+    pub country_url: String,
 }
 
 impl Config {

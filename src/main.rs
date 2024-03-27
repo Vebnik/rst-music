@@ -2,13 +2,13 @@ mod config;
 mod error;
 mod commands;
 mod types;
+mod services;
 
 use config::Config;
 use types::Data;
 
-// poise
 use poise::serenity_prelude as serenity;
-
+use std::sync::Mutex;
 
 #[tokio::main]
 async fn main() -> Result<(), ()> {
@@ -37,7 +37,7 @@ async fn main() -> Result<(), ()> {
 
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {})
+                Ok(Data {countrys: Mutex::new(None)})
             })
         })
         .build();
