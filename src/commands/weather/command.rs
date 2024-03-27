@@ -1,40 +1,70 @@
 use poise::serenity_prelude as serenity;
 use serenity::futures::StreamExt;
 use serenity::futures::{Stream, future, stream};
+use serenity::model::Colour;
 
 use crate::error::Error;
 use crate::types::Context;
-use crate::services::country::types::Country;
+use crate::services::country::types::City;
+use crate::services::open_weather::types::OpenWeather;
 
+/// autocomplete for city input choice
 async fn autocomplete_city<'a>(ctx: Context<'_>, partial: &'a str) -> impl Stream<Item = String> + 'a {
     let app_data = ctx.data();
-    let opt_country = app_data.countrys.lock().unwrap().clone();
+    let cities = app_data.cities.lock().unwrap().clone();
 
-    let countrys = match opt_country {
+    let cities: Vec<City> = match cities {
         Some(data) => data,
-        None => {
-            let data = Country::all().await.unwrap();
-            app_data.set_countrys(data.clone());
-            data
-        },
+        None => app_data.set_cities(City::all().await.unwrap()),
     };
 
-    stream::iter(countrys)
-        .filter(move |country| future::ready(country.title.starts_with(partial)))
+    stream::iter(cities)
+        .filter(move |country| future::ready(country.title.to_lowercase().starts_with(partial)))
         .map(|country| country.title)
 }
 
-/// Displays current weather on select city
+/// Displays current weather on select country -> city
 #[poise::command(slash_command)]
 pub async fn weather(
     ctx: Context<'_>,
     #[description = "Enter city"]
     #[autocomplete = "autocomplete_city"]
-    city: Option<String>,
+    city: String,
 ) -> Result<(), Error> {
-    let c = city.unwrap_or_else(|| "Uganda".to_string());
-    let response = format!("Select {} city", c);
+    ctx.defer().await?;
 
-    ctx.say(response).await?;
+    let weather_data = OpenWeather::by_city(&city).await;
+
+    let temp_field = format!(
+        "```\nCurrent ➜ {} °C\nMin ➜ {}\nMax ➜ {}\n```",
+        weather_data.main.feels_like,
+        weather_data.main.temp_min,
+        weather_data.main.temp_max,
+    ); 
+
+    let wind_field = format!(
+        "```\nSpeed ➜ {} M/s\nDeg ➜ {}\n```",
+        weather_data.wind.speed,
+        weather_data.wind.deg,
+    );
+
+    let misc_field = format!(
+        "```\nSunrise ➜ {} Unix\nSunset ➜ {} Unix\n```",
+        weather_data.sys.sunrise,
+        weather_data.sys.sunset,
+    );
+
+    let embed = serenity::CreateEmbed::new()
+        .description(format!("Weather in {}", weather_data.name))
+        .field("Temp 🌡️", temp_field, false)
+        .field("Wind 💨", wind_field, false)
+        .field("Misc 🗃️", misc_field, false)
+        .color(Colour::BLUE);
+    
+    let builder = serenity::builder::CreateMessage::new()
+        .add_embed(embed);
+
+    ctx.channel_id().send_message(ctx.http(), builder).await?;
+
     Ok(())
 }

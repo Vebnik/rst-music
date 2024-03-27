@@ -1,16 +1,17 @@
-use poise::serenity_prelude as serenity;
-
 use crate::error::Error;
 use crate::types::Context;
 
 /// Displays your or another user's account creation date
 #[poise::command(slash_command)]
-pub async fn age(
-    ctx: Context<'_>,
-    #[description = "Selected user"] user: Option<serenity::User>,
-) -> Result<(), Error> {
-    let u = user.as_ref().unwrap_or_else(|| ctx.author());
-    let response = format!("{}'s account was created at {}", u.name, u.created_at());
-    ctx.say(response).await?;
+pub async fn pagiante(ctx: Context<'_>) -> Result<(), Error> {
+    let pages = &[
+        "Content of first page",
+        "Content of second page",
+        "Content of third page",
+        "Content of fourth page",
+    ];
+
+    poise::samples::paginate(ctx, pages).await?;
+
     Ok(())
 }

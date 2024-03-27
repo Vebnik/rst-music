@@ -28,6 +28,7 @@ async fn main() -> Result<(), ()> {
     let cmds = commands::get_cmds();
     println!("Try to register {} commands", cmds.capacity());
 
+    // poise framework init
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {commands: cmds, ..Default::default()})
         .setup(|ctx, ready, framework| {
@@ -36,12 +37,21 @@ async fn main() -> Result<(), ()> {
             ctx.idle();
 
             Box::pin(async move {
-                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {countrys: Mutex::new(None)})
+                for guild in ready.guilds.iter() {
+                    poise::builtins::register_in_guild(ctx, &framework.options().commands, guild.id).await?;
+                };
+
+                let data = Data {
+                    countrys: Mutex::new(None),
+                    cities: Mutex::new(None),
+                };
+
+                Ok(data)
             })
         })
         .build();
-
+    
+    // create client
     let mut client = serenity::ClientBuilder::new(&cfg.token, intents)
         .framework(framework)
         .await
