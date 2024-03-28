@@ -1,12 +1,16 @@
-use std::sync::Mutex;
+use std::sync::{Mutex, Arc};
+use lavalink_rs::prelude::LavalinkClient;
 
 use crate::error::Error;
 use crate::services::country::types::{Country, City};
+use crate::config::Config;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Data {
-    pub countrys: Mutex<Option<Vec<Country>>>,
-    pub cities: Mutex<Option<Vec<City>>>
+    pub countrys: Arc<Mutex<Option<Vec<Country>>>>,
+    pub cities: Arc<Mutex<Option<Vec<City>>>>,
+    pub config: Arc<Config>,
+    pub ll_client: Arc<LavalinkClient>,
 }
 
 pub type Context<'a> = poise::Context<'a, Data, Error>;

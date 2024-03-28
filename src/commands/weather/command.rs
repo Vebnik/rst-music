@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
 use poise::serenity_prelude as serenity;
 use serenity::futures::StreamExt;
 use serenity::futures::{Stream, future, stream};
 use serenity::model::Colour;
 
 use crate::error::Error;
-use crate::types::Context;
+use crate::types::{Context, Data};
 use crate::services::country::types::City;
 use crate::services::open_weather::types::OpenWeather;
 
@@ -15,7 +17,7 @@ async fn autocomplete_city<'a>(ctx: Context<'_>, partial: &'a str) -> impl Strea
 
     let cities: Vec<City> = match cities {
         Some(data) => data,
-        None => app_data.set_cities(City::all().await.unwrap()),
+        None => app_data.set_cities(City::all(Arc::clone(&app_data.config)).await.unwrap()),
     };
 
     stream::iter(cities)
@@ -31,25 +33,26 @@ pub async fn weather(
     #[autocomplete = "autocomplete_city"]
     city: String,
 ) -> Result<(), Error> {
-    ctx.defer().await?;
+    ctx.defer_ephemeral().await?;
 
-    let weather_data = OpenWeather::by_city(&city).await;
+    let Data { config, .. } = ctx.data();
+    let weather_data = OpenWeather::by_city(&city, Arc::clone(&config)).await;
 
     let temp_field = format!(
-        "```\nCurrent ➜ {} °C\nMin ➜ {}\nMax ➜ {}\n```",
+        "```fix\nCurrent ➜ {} °C\nMin ➜ {}\nMax ➜ {}\n```",
         weather_data.main.feels_like,
         weather_data.main.temp_min,
         weather_data.main.temp_max,
     ); 
 
     let wind_field = format!(
-        "```\nSpeed ➜ {} M/s\nDeg ➜ {}\n```",
+        "```fix\nSpeed ➜ {} M/s\nDeg ➜ {}\n```",
         weather_data.wind.speed,
         weather_data.wind.deg,
     );
 
     let misc_field = format!(
-        "```\nSunrise ➜ {} Unix\nSunset ➜ {} Unix\n```",
+        "```fix\nSunrise ➜ {} Unix\nSunset ➜ {} Unix\n```",
         weather_data.sys.sunrise,
         weather_data.sys.sunset,
     );

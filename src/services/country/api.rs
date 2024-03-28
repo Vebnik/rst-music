@@ -1,10 +1,11 @@
+use std::sync::Arc;
 use reqwest;
 
 use super::types::{Country, City};
-use crate::error::Result;
+use crate::{config::Config, error::Result};
 
 impl Country {
-    pub async fn all() -> Result<Vec<Self>> {
+    pub async fn _all() -> Result<Vec<Self>> {
         log::debug!("Get all Country");
 
         let data = reqwest::get("https://raw.githubusercontent.com/russ666/all-countries-and-cities-json/master/countries.json")
@@ -31,12 +32,12 @@ impl Country {
 }
 
 impl City {
-    pub async fn all() -> Result<Vec<Self>> {
+    pub async fn all(cfg: Arc<Config>) -> Result<Vec<Self>> {
         log::debug!("Get all City");
 
         let mut compare_cities: Vec<Self> = vec![];
 
-        let data = reqwest::get("https://raw.githubusercontent.com/russ666/all-countries-and-cities-json/master/countries.json")
+        let data = reqwest::get(&cfg.country_url)
             .await?
             .json::<serde_json::Value>()
             .await?;
