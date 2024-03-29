@@ -5,6 +5,7 @@ mod types;
 mod services;
 
 use config::Config;
+use songbird::SerenityInit;
 use types::Data;
 use services::lavalink::handlers;
 
@@ -79,6 +80,7 @@ async fn main() -> Result<(), ()> {
     
     // create client
     let mut client = serenity::ClientBuilder::new(&cfg.token, serenity::GatewayIntents::all())
+        .register_songbird()
         .framework(framework)
         .await
         .unwrap();

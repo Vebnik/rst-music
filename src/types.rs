@@ -1,5 +1,7 @@
 use std::sync::{Mutex, Arc};
-use lavalink_rs::prelude::LavalinkClient;
+use lavalink_rs::client::LavalinkClient;
+use poise::serenity_prelude as serenity;
+use serenity::{model::id::ChannelId, Http};
 
 use crate::error::Error;
 use crate::services::country::types::{Country, City};
@@ -14,6 +16,8 @@ pub struct Data {
 }
 
 pub type Context<'a> = poise::Context<'a, Data, Error>;
+
+pub type PlayerContextData = (ChannelId, Arc<Http>);
 
 impl Data {
     pub fn set_cities(&self, cities: Vec<City>) -> Vec<City> {
