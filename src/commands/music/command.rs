@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use lavalink_rs::prelude::{TrackInQueue, TrackLoadData, SearchEngines};
-use poise::ChoiceParameter;
 use serenity::futures::StreamExt;
 use serenity::futures::{Stream, stream};
 
