@@ -3,19 +3,25 @@ name = "rst-music"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# main stack
 dotenv = "0.15.0"
 env_logger = "0.11.3"
 envy = "0.4.2"
 futures = "0.3.30"
-lavalink-rs = { version = "0.11.0", features = ["songbird", "serenity", "macros", "rustls"] }
 log = { version = "0.4.21", features = ["serde"] }
-poise = "0.6.1"
 reqwest = { version = "0.12.2", features = ["json"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
-serenity = "0.12"
-songbird = { version = "0.4.1", features = ["gateway", "serenity", "rustls", "driver"] }
 tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
+
+# discord stack
+serenity = "0.12"
+poise = "0.6.1"
+
+# discord voice stack
+lavalink-rs = { version = "0.11.0", features = ["songbird", "serenity", "macros", "rustls"] }
+songbird = { version = "0.4.1", features = ["gateway", "serenity", "rustls", "driver", "builtin-queue", "receive"] }
+symphonia = { version = "0.5.2", features = ["aac", "mp3", "isomp4", "alac"]}
+audiopus = "0.2"

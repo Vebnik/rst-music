@@ -18,7 +18,7 @@ pub async fn join(
         Some(mng) => mng,
         _ => {
             log::error!("Not found serenity_context");
-            return Ok(false);
+            return Err("Not found serenitycontext".into());
         }
     };
 
@@ -27,6 +27,7 @@ pub async fn join(
             Some(x) => x,
             None => {
                 let guild = ctx.guild().unwrap().deref().clone();
+
                 let user_channel_id = guild
                     .voice_states
                     .get(&ctx.author().id)
@@ -35,7 +36,6 @@ pub async fn join(
                 match user_channel_id {
                     Some(channel) => channel,
                     None => {
-                        ctx.say("Not in a voice channel").await?;
                         return Err("Not in a voice channel".into());
                     }
                 }
